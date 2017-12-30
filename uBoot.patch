@@ -1,0 +1,59 @@
+--- b/include/configs/vexpress_common.h	2017-01-10 00:57:05.000000000 +0800
++++ a/include/configs/vexpress_common.h	2017-12-31 01:11:18.188313040 +0800
+@@ -48,6 +48,10 @@
+ #define CONFIG_SYS_TEXT_BASE	0x80800000
+ #endif
+ 
++/*netmask*/
++#define CONFIG_IPADDR 192.168.11.11
++#define CONFIG_NETMASK 255.255.255.0
++#define CONFIG_SERVERIP 192.168.11.22
+ /*
+  * Physical addresses, offset from V2M_PA_CS0-3
+  */
+@@ -185,9 +189,12 @@
+ #include <config_distro_defaults.h>
+ 
+ /* Basic environment settings */
++/* for rootfs : sd card*/
++/*setenv bootargs 'root=/dev/mmcblk0 console=tty0';*/
+ #define CONFIG_BOOTCOMMAND \
+-	"run distro_bootcmd; " \
+-	"run bootflash; "
++	"tftp 0x60003000 uImage;tftp 0x60500000 vexpress-v2p-ca9.dtb; \
++	setenv bootargs root=/dev/mmcblk0 rw console=ttyAMA0; \
++	bootm 0x60003000 - 0x60500000"
+ 
+ #define BOOT_TARGET_DEVICES(func) \
+         func(MMC, mmc, 1) \
+--- b/Makefile	2017-01-10 00:57:05.000000000 +0800
++++ a/Makefile	2017-12-31 00:52:10.216313040 +0800
+@@ -7,7 +7,7 @@
+ SUBLEVEL =
+ EXTRAVERSION =
+ NAME =
+-
++ARCH :=arm
+ # *DOCUMENTATION*
+ # To see a list of typical targets execute "make help"
+ # More info can be located in ./README
+@@ -245,6 +245,7 @@
+ ifeq ($(HOSTARCH),$(ARCH))
+ CROSS_COMPILE ?=
+ endif
++CROSS_COMPILE ?= arm-linux-gnueabi-
+ 
+ KCONFIG_CONFIG	?= .config
+ export KCONFIG_CONFIG
+--- b/config.mk	2017-01-10 00:57:05.000000000 +0800
++++ a/config.mk	2017-12-31 00:51:34.724313040 +0800
+@@ -22,7 +22,8 @@
+ VENDOR :=
+ #########################################################################
+ 
+-ARCH := $(CONFIG_SYS_ARCH:"%"=%)
++#ARCH := $(CONFIG_SYS_ARCH:"%"=%)
++ARCH :=arm
+ CPU := $(CONFIG_SYS_CPU:"%"=%)
+ ifdef CONFIG_SPL_BUILD
+ ifdef CONFIG_TEGRA
